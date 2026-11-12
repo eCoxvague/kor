@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>KOR — Orman Ateşi Bekliyor</title>
+<link rel="icon" href="data:," />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div id="frame">
+  <canvas id="game" width="480" height="270"></canvas>
+  <div id="vignette"></div>
+
+  <!-- HUD -->
+  <div id="hud">
+    <div class="hud-top">
+      <div class="hud-block">
+        <div class="lbl">ODUN</div>
+        <div id="wood">0</div>
+      </div>
+      <div class="hud-block grow">
+        <div class="lbl">ATEŞ <span id="fireState">SÖNÜK</span></div>
+        <div class="bar"><div id="fireBar" class="fill fire"></div></div>
+        <div class="lbl heat-lbl">ISI <span id="heatState">ILIK</span></div>
+        <div class="bar"><div id="heatBar" class="fill heat"></div></div>
+      </div>
+      <div class="hud-block right">
+        <div class="lbl">SEVİYE</div>
+        <div id="lvl">1</div>
+        <div id="xpMini" class="xp-mini"><div id="xpMiniFill"></div></div>
+      </div>
+    </div>
+    <div id="skillBar"></div>
+    <div id="combo"></div>
+  </div>
+
+  <!-- Beceri ağacı -->
+  <div id="tree" class="hidden">
+    <div class="tree-head">
+      <h2>KOR AĞACI</h2>
+      <div class="tree-pts">Kor Puanı: <span id="pts">0</span></div>
+      <div class="tree-hint">F / ESC ile kapat · sınıfın 3 dalı, her dalda 4 düğüm</div>
+    </div>
+    <div id="treeCols"></div>
+  </div>
+
+  <!-- Ekranlar -->
+  <div id="title" class="screen">
+    <h1>KOR</h1>
+    <p class="sub">orman ateşi bekliyor</p>
+    <p class="desc">Odunu kes. Ateşe at. Karanlık yaklaşmadan güçlen.<br/>Ateş seni ısıtır — fazlası yakar.</p>
+    <button id="startBtn">ORMANA GİR</button>
+    <p class="keys">WASD hareket · SOL TIK / BOŞLUK saldır (basılı tut) · E ateşe at · F ağaç · 1-2-3-Q yetenek · SHIFT atıl · ESC duraklat · M ses</p>
+  </div>
+
+  <div id="classSel" class="screen hidden">
+    <h1>SINIF SEÇ</h1>
+    <button class="cls-btn" id="clsBtn0" data-class="baltaci">BALTACI</button>
+    <button class="cls-btn" id="clsBtn1" data-class="okcu">OKÇU</button>
+    <button class="cls-btn" id="clsBtn2" data-class="buyucu">BÜYÜCÜ</button>
+  </div>
+
+  <div id="death" class="screen hidden">
+    <h1 id="deathTitle">KARANLIK ALDI</h1>
+    <p class="desc" id="deathStats"></p>
+    <button id="retryBtn">TEKRAR</button>
+    <button id="changeBtn">SINIF DEĞİŞTİR</button>
+  </div>
+
+  <div id="toast"></div>
+</div>
+<script>
+// yalnızca ?demo=... ile: yükleme/çalışma hatalarını ekrana yazar (ekran görüntüsüyle doğrulama için)
+if (/[?&]demo=/.test(location.search)) {
+  var showErr = function (m) {
+    var e = document.getElementById('bootErr');
+    if (!e) { e = document.createElement('pre'); e.id = 'bootErr'; e.style.cssText = 'position:fixed;left:0;top:0;z-index:99;margin:0;padding:4px;background:#5c120b;color:#fff6d6;font:12px monospace;white-space:pre-wrap;max-width:100vw'; document.body.appendChild(e); }
+    e.appendChild(document.createTextNode(m));
+    e.appendChild(document.createElement('br'));
+  };
+  window.addEventListener('error', function (e) { showErr('HATA: ' + e.message + ' @ ' + (e.filename || '').split('/').pop() + ':' + e.lineno); });
+  window.addEventListener('unhandledrejection', function (e) { showErr('HATA (promise): ' + (e.reason && e.reason.stack || e.reason)); });
+}
+</script>
+<script type="module" src="src/main.js"></script>
+</body>
+</html>

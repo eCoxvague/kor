@@ -1,0 +1,8 @@
+{
+  "name": "kor",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node tests/check-imports.mjs && node tests/smoke.mjs"
+  }
+}

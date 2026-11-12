@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8" />
+<title>KOR — sprite galerisi</title>
+<link rel="icon" href="data:," />
+<style>
+  body{background:#0e1120;color:#b3aa9b;font:12px ui-monospace,Consolas,monospace;margin:12px}
+  h2{color:#ff7a26;font-size:14px;margin:18px 0 6px;letter-spacing:2px}
+  h3{color:#7a736a;font-size:11px;margin:8px 0 4px}
+  .row{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end}
+  .cell{display:flex;flex-direction:column;align-items:center;gap:2px}
+  .cell span{font-size:10px;color:#7a736a}
+  canvas{image-rendering:pixelated;background:#2b3352;outline:1px solid #1a2038}
+  canvas.dark{background:#07080f}
+  nav a{color:#ffb447;margin-right:10px}
+</style>
+</head>
+<body>
+<nav>Bölümler (?s=...):
+  <a href="?s=all">hepsi</a><a href="?s=player">oyuncu</a><a href="?s=trees">ağaçlar</a><a href="?s=enemies">yaratıklar</a>
+  <a href="?s=fire">ateş</a><a href="?s=terrain">zemin</a><a href="?s=icons">ikonlar</a><a href="?s=font">font</a><a href="?s=light">ışık</a><a href="?s=fx">efektler</a>
+</nav>
+<div id="out"></div>
+<script type="module">
+import * as S from '../src/art/sprites.js';
+import { FONT_CHARS } from '../src/art/font.js';
+import { logoSprite } from '../src/art/screens.js';
+import * as FXA from '../src/art/fxart.js';
+
+const SC = 6;
+const out = document.getElementById('out');
+const errs = [];
+window.addEventListener('error', e => errs.push(e.message));
+const want = new URLSearchParams(location.search).get('s') || 'all';
+const on = s => want === 'all' || want === s;
+
+function section(title) { const h = document.createElement('h2'); h.textContent = title; out.appendChild(h); }
+function sub(title) { const h = document.createElement('h3'); h.textContent = title; out.appendChild(h); }
+function row() { const r = document.createElement('div'); r.className = 'row'; out.appendChild(r); return r; }
+function show(r, src, label, scale = SC, dark = false) {
+  const c = document.createElement('canvas');
+  c.width = src.width * scale; c.height = src.height * scale;
+  if (dark) c.className = 'dark';
+  const x = c.getContext('2d'); x.imageSmoothingEnabled = false;
+  x.drawImage(src, 0, 0, c.width, c.height);
+  const cell = document.createElement('div'); cell.className = 'cell';
+  cell.appendChild(c);
+  if (label !== undefined) { const s = document.createElement('span'); s.textContent = label; cell.appendChild(s); }
+  r.appendChild(cell);
+}
+
+try {
+if (on('player')) {
+  section('SINIFLAR — baltacı / okçu / büyücü (28x32, ayak 14,29)');
+  for (const cls of S.CLASS_KEYS) {
+    for (const dir of ['r', 'l', 'd', 'u']) {
+      sub(cls + ' · yön ' + dir + ' — bekleme 2, yürüme 4, hazırlık, darbe, atılma, hasar, flaş, hayalet, odun');
+      const r = row();
+      for (const p of S.POSES) show(r, S.playerFrame(dir, p, 'n', cls), p);
+      show(r, S.playerFrame(dir, 'idle0', 'f', cls), 'flaş');
+      show(r, S.playerFrame(dir, 'walk1', 'g', cls), 'hayalet');
+      show(r, S.basketLogs(dir, cls), 'odun');
+    }
+  }
+  sub('balta: 32 açı');
+  let r = row();
+  for (let i = 0; i < 32; i++) show(r, S.axeFrame(i / 32 * Math.PI * 2), String(i), 3);
+  sub('yay: gerili / bırakılmış, 32 açı');
+  r = row();
+  for (let i = 0; i < 32; i += 2) show(r, S.bowFrame(i / 32 * Math.PI * 2, true), 'g' + i, 3);
+  for (let i = 0; i < 32; i += 2) show(r, S.bowFrame(i / 32 * Math.PI * 2, false), 'b' + i, 3);
+}
+if (on('fx')) {
+  section('EFEKTLER — darbe kıvılcımı, ok, kor küresi, alev hilali, çentikler, patlama diski, kristal, alev dili, meteor');
+  let r = row();
+  for (const t of ['hot', 'steel', 'frost']) { show(r, FXA.impactSprite(0, t), t + ' 0', 5, true); show(r, FXA.impactSprite(1, t), t + ' 1', 5, true); }
+  for (let f = 0; f < 4; f++) show(r, FXA.orbSprite(f, 'fire'), 'küre ' + f, 5, true);
+  show(r, FXA.orbSprite(0, 'frost'), 'ayaz', 5, true); show(r, FXA.meteorSprite(), 'meteor', 5, true); show(r, FXA.lockBadge(), 'kilit', 5);
+  for (let k = 0; k < 3; k++) { show(r, FXA.crystalSprite(k), 'kristal', 5, true); show(r, FXA.tongueSprite(k), 'dil', 5, true); }
+  for (let k = 1; k <= 4; k++) show(r, FXA.dustPuff(k), 'toz', 5);
+  sub('ok / alevli ok / delici ok, alev hilali: 16 açı');
+  r = row();
+  for (const kd of ['arrow', 'fire', 'lance']) for (let i = 0; i < 16; i += 2) show(r, FXA.arrowSprite(i / 16 * Math.PI * 2, kd), kd + i, 3, true);
+  for (let i = 0; i < 16; i += 2) show(r, FXA.crescentSprite(i / 16 * Math.PI * 2), 'hilal' + i, 3, true);
+  sub('gövde çentikleri: tür x evre 1-3 x yön');
+  r = row();
+  for (const t of ['birch', 'oak', 'iron', 'ember']) for (let st = 1; st <= 3; st++) for (const d of [1, -1]) show(r, FXA.notchSprite(t, st, d), t + st + (d > 0 ? '>' : '<'), 6);
+  sub('patlama / alan diskleri (yoğun, orta, seyrek)');
+  r = row();
+  for (const t of ['fire', 'frost', 'ash', 'moss', 'gold']) for (const dn of [1, 0.5, 0]) show(r, FXA.discSprite(24, t, dn), t + ' ' + dn, 2, true);
+}
+if (on('trees')) {
+  section('AĞAÇLAR — huş / meşe / demir / kor; 4 varyant + aynalı (ışık sağdan) + vuruş flaşı');
+  for (const t of ['birch', 'oak', 'iron', 'ember']) {
+    sub(t);
+    const r = row();
+    for (let v = 0; v < 4; v++) show(r, S.treeSprite(t, v, false), 'v' + v, 4);
+    show(r, S.treeSprite(t, 0, true), 'aynalı', 4);
+    show(r, S.treeFlash(t, 0, false), 'flaş', 4);
+  }
+}
+if (on('enemies')) {
+  section('YARATIKLAR — 4 kare, flaş, aynalı, küle dağılma (4 adım)');
+  for (const k of ['cinder', 'shade', 'wolf', 'kolos']) {
+    sub(k);
+    const r = row();
+    for (let f = 0; f < 4; f++) show(r, S.enemySprite(k, f), 'kare ' + f, 5, true);
+    show(r, S.enemySprite(k, 0, true), 'flaş', 5, true);
+    show(r, S.enemySprite(k, 0, false, true), 'aynalı', 5, true);
+    for (let s = 0; s < 4; s++) show(r, S.enemyDeath(k, s), 'ölüm ' + s, 5, true);
+  }
+}
+if (on('fire')) {
+  section('ATEŞ — ocak, kütükler, 7 boy x 8 kare alev');
+  const r0 = row();
+  show(r0, S.hearthSprite(), 'ocak', 5, true);
+  show(r0, S.hearthLogs(false), 'kütük', 5, true);
+  show(r0, S.hearthLogs(true), 'sönük', 5, true);
+  for (let si = 0; si < S.FLAME_SIZES.length; si++) {
+    sub('alev boyu ' + si + ' (' + S.FLAME_SIZES[si].join('x') + ')');
+    const r = row();
+    for (let f = 0; f < 8; f++) show(r, S.flameFrame(si, f), String(f), si < 4 ? 5 : 3, true);
+  }
+  sub('parçacıklar: kıvılcım, kor, duman, kül, kırık');
+  const r = row();
+  for (let v = 0; v < 4; v++) show(r, S.sparkSprite(v), 'kıvılcım', 8, true);
+  for (let v = 0; v < 3; v++) show(r, S.emberParticle(v), 'kor', 8, true);
+  for (let v = 1; v <= 4; v++) show(r, S.smokePuff(v), 'duman', 8, true);
+  for (let v = 0; v < 2; v++) show(r, S.ashMote(v), 'kül', 8, true);
+  show(r, S.shardSprite(), 'kırık', 8, true);
+}
+if (on('terrain')) {
+  section('ZEMİN VE DEKOR');
+  const r = row();
+  for (let v = 0; v < 4; v++) show(r, S.rockSprite(v), 'taş ' + v);
+  for (let v = 0; v < 5; v++) show(r, S.bushSprite(v), 'çalı ' + v);
+  for (let v = 0; v < 2; v++) show(r, S.stumpSprite(v), 'kütük ' + v);
+  const r2 = row();
+  for (const t of ['birch', 'oak', 'iron', 'ember']) show(r2, S.logPiece(t), 'odun ' + t);
+  show(r2, S.ashOrb(), 'kül küresi');
+  for (const t of ['birch', 'oak', 'iron', 'ember']) { show(r2, S.chipSprite(t, 0), 'talaş'); show(r2, S.leafSprite(t, 0), 'yaprak'); }
+  sub('dikişsiz zemin: ocak çevresi 2x2 parça (2x) — parça sınırları 256px');
+  const r3 = row();
+  const alt = { x: 1300, y: 1000 };
+  const big = document.createElement('canvas'); big.width = 512; big.height = 512;
+  const bx = big.getContext('2d');
+  for (let j = 0; j < 2; j++) for (let i = 0; i < 2; i++) bx.drawImage(S.groundChunk(4 + i, 3 + j, alt), i * 256, j * 256);
+  show(r3, big, 'zemin 4..5 x 3..4', 2);
+}
+if (on('icons')) {
+  section('İKONLAR — normal / kilitli siluet / gri');
+  const r = row();
+  for (const id of S.ICON_IDS) show(r, S.icon(id), id, 5, true);
+  const r2 = row();
+  for (const id of S.ICON_IDS) show(r2, S.icon(id, 'd'), '', 3, true);
+}
+if (on('font')) {
+  section('FONT — Kor Yazı (12px satır), mini 3x5');
+  const c = document.createElement('canvas'); c.width = 480; c.height = 120;
+  const x = c.getContext('2d'); x.imageSmoothingEnabled = false;
+  x.fillStyle = '#07080f'; x.fillRect(0, 0, 480, 120);
+  const lines = [
+    'ABCÇDEFGĞHIİJKLMNOÖPQRSŞTUÜVWXYZ 0123456789',
+    'abcçdefgğhıijklmnoöpqrsştuüvwxyz .,:;!?-+/%()[]·—',
+    'KÜKRÜYOR · ÜŞÜYOR · SEVİYE · KOR AĞACI · Ağır Darbe',
+    'Işık yarıçapı +14 · Sıcaklık kaybı -0.35/sn · İçsel Kor',
+  ];
+  lines.forEach((l, i) => S.drawText(x, l, 4, 4 + i * 14, { color: i % 2 ? '#ffb447' : '#e9e0cc', shadow: '#07080f' }));
+  S.drawText(x, '1 2 3 Q E F 0.5 12/20 x7', 4, 64, { mini: true, color: '#ffe08a' });
+  S.drawText(x, 'KOP! 128', 4, 76, { scale: 2, color: '#ffb447', outline: '#07080f', thick: true });
+  const r = row(); show(r, c, 'font 3x', 3, true);
+  const r2 = row(); show(r2, logoSprite(), 'logo', 3, true);
+}
+if (on('light')) {
+  section('IŞIK — bantlı/dither delik ve parıltı, kenar uyarıları, vinyet (düşük çözünürlük)');
+  const r = row();
+  for (const rr of [12, 24, 48]) show(r, S.lightHole(rr), 'delik r' + rr, 3);
+  show(r, S.lightGlow(40, [255, 120, 40], 0.5), 'parıltı', 3, true);
+  show(r, S.edgeGlow('#c8352a'), 'kenar kan', 2, true);
+  show(r, S.edgeGlow('#8fd3ff'), 'kenar ayaz', 2, true);
+  show(r, S.vignette(), 'vinyet', 2);
+  show(r, S.shadowEllipse(12, 4), 'gölge', 6);
+}
+} catch (e) { errs.push(String(e && e.stack || e)); }
+const st = document.createElement('pre'); st.id = 'status';
+st.textContent = errs.length ? 'HATA: ' + errs.join('\n') : 'OK ' + out.querySelectorAll('canvas').length + ' canvas';
+document.body.prepend(st);
+document.title = st.textContent.slice(0, 60);
+</script>
+</body>
+</html>
